@@ -1,4 +1,17 @@
+# Python
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Jupyter
 .ipynb_checkpoints/
+
+# Runtime logs
+app.log
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
