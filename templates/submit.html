@@ -8,49 +8,155 @@
 </head>
 <body>
 
-<div class="container" style="max-width: 700px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh;">
-    <!-- Result Card -->
+<div class="container" style="max-width: 780px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 2rem 1rem;">
+
     <div class="glass-card result-container" style="width: 100%; animation: fadeIn 0.6s ease-in-out forwards;">
-        
+
+        <!-- Result Badge -->
         <div class="result-badge {% if approved %}approved{% else %}rejected{% endif %}">
             {% if approved %}
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                    </path>
                 </svg>
             {% else %}
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
                 </svg>
             {% endif %}
         </div>
 
+        <!-- Title -->
         <h1 class="result-title {% if approved %}approved{% else %}rejected{% endif %}">
             {{ prediction }}
         </h1>
-        
+
+        <!-- Subtitle -->
         <p class="result-text">
             {% if approved %}
-                Our machine learning models have analyzed the financial profile and determined high eligibility for the requested loan amount.
+                Congratulations! Based on your financial profile you are eligible.
+                Here is your loan summary.
             {% else %}
-                Our analysis indicates high risk profile. The financial characteristics of this application do not meet the minimum safety parameters.
+                Your application could not be approved at this time.
+                Here is what we found.
             {% endif %}
         </p>
 
-        <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+        <!-- ── APPROVED: clean summary rows ────────────────────────────── -->
+        {% if approved and rec %}
+        {% set risk_cls = rec.risk_level | lower %}
+        <div class="summary-metrics" style="margin-top:1.5rem">
+            <div class="summary-item">
+                <span class="summary-label">Your Monthly Income</span>
+                <span class="summary-value">₹{{ "{:,}".format(applicant_income) }}/mo</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">You Requested</span>
+                <span class="summary-value">₹{{ "{:,}".format(requested_loan) }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Max Eligible Loan</span>
+                <span class="summary-value text-success">₹{{ "{:,}".format(rec.recommended_loan) }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Monthly EMI</span>
+                <span class="summary-value text-accent">₹{{ "{:,}".format(rec.suggested_emi) }}/mo</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Interest Rate / Tenure</span>
+                <span class="summary-value">{{ rec.interest_rate }}% p.a. · {{ rec.tenure_years }} Years</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">EMI-to-Income · Risk</span>
+                <span class="summary-value">{{ rec.emi_to_income_ratio }}% · <span class="risk-badge {{ risk_cls }}">{{ rec.risk_level }}</span></span>
+            </div>
+            {% set ch_class = "text-success" if credit_history == 1 else "text-danger" %}
+            <div class="summary-item">
+                <span class="summary-label">Credit History</span>
+                <span class="summary-value {{ ch_class }}">
+                    {{ "Good" if credit_history == 1 else "Poor" }}
+                </span>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ── REJECTED: actual numbers + tips ─────────────────────────── -->
+        {% if not approved and rec %}
+        <div class="rejection-box">
+            <p class="box-heading">Your Financial Snapshot</p>
+            <div class="summary-metrics">
+                <div class="summary-item">
+                    <span class="summary-label">Your Monthly Income</span>
+                    <span class="summary-value">₹{{ "{:,}".format(rec.total_income) }}/mo</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">You Requested</span>
+                    <span class="summary-value text-danger">₹{{ "{:,}".format(requested_loan) }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Max You Can Get</span>
+                    <span class="summary-value text-success">₹{{ "{:,}".format(rec.recommended_loan) }}</span>
+                </div>
+                {% if rec.shortfall > 0 %}
+                <div class="summary-item">
+                    <span class="summary-label">Reduce Loan By</span>
+                    <span class="summary-value text-danger">₹{{ "{:,}".format(rec.shortfall) }}</span>
+                </div>
+                {% endif %}
+                <div class="summary-item">
+                    <span class="summary-label">Affordable EMI</span>
+                    <span class="summary-value text-accent">₹{{ "{:,}".format(rec.suggested_emi) }}/mo</span>
+                </div>
+                {% set ch_class = "text-success" if credit_history == 1 else "text-danger" %}
+                <div class="summary-item">
+                    <span class="summary-label">Credit History</span>
+                    <span class="summary-value {{ ch_class }}">
+                        {{ "Good" if credit_history == 1 else "Poor" }}
+                    </span>
+                </div>
+            </div>
+
+            {% if tips %}
+            <div class="result-divider"></div>
+            <p class="box-heading">How to Improve Eligibility</p>
+            <ul class="suggestion-list">
+                {% for t in tips %}
+                <li>
+                    <span class="suggestion-dot">›</span>
+                    <span>{{ t }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div style="display:flex; justify-content:center; gap:1rem; margin-top:2rem;">
             <a href="/predict" class="btn btn-primary">
-                <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.253 8H18"></path></svg>
+                <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.253 8H18"></path>
+                </svg>
                 New Evaluation
             </a>
             <a href="/" class="btn btn-secondary">
-                <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
                 Home Dashboard
             </a>
         </div>
+
     </div>
 </div>
 
 <footer>
-    <div class="container" style="padding: 1.5rem 0; margin-top: 0;">
+    <div class="container" style="padding:1.5rem 0; margin-top:0;">
         <p>&copy; 2026 SmartLender™ Systems. Powered by Machine Learning classifiers.</p>
     </div>
 </footer>

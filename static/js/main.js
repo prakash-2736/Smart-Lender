@@ -179,65 +179,140 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Render prediction result
     const renderPredictionResult = (data) => {
-        const formWrapper = document.getElementById('form-wrapper');
+        const formWrapper   = document.getElementById('form-wrapper');
         const resultSection = document.getElementById('result-section');
-
         if (!formWrapper || !resultSection) return;
 
         const isApproved = data.approved;
+        const rec        = data.recommendation || null;
+        const tips       = data.tips || [];
 
-        // Build result HTML
-        resultSection.innerHTML = `
-            <div class="glass-card result-container" style="animation: fadeIn 0.6s ease-in-out forwards;">
-                <div class="result-badge ${isApproved ? 'approved' : 'rejected'}">
-                    ${isApproved ?
-                `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>` :
-                `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>`
-            }
-                </div>
-                <h1 class="result-title ${isApproved ? 'approved' : 'rejected'}">
-                    ${isApproved ? 'Application Approved' : 'Application Rejected'}
-                </h1>
-                <p class="result-text">
-                    ${isApproved ?
-                'Our machine learning models have analyzed the financial profile and determined high eligibility for the requested loan amount.' :
-                'Our analysis indicates high risk profile. The financial characteristics of this application do not meet the minimum safety parameters.'
-            }
-                </p>
-                
-                <div class="summary-metrics">
+        const applicantIncome = parseFloat(document.getElementById('ApplicantIncome').value) || 0;
+        const loanAmount      = parseFloat(document.getElementById('LoanAmount').value)      || 0;
+        const creditHistory   = document.getElementById('Credit_History').value;
+
+        const fmt = (n) => Math.round(n).toLocaleString('en-IN');
+
+        const approvedSVG = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>`;
+        const rejectedSVG = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+
+        // ── APPROVED: clean summary ───────────────────────────────────────────
+        let bodyHTML = '';
+        if (isApproved && rec) {
+            const riskCls = rec.risk_level === 'Low' ? 'low' : rec.risk_level === 'Medium' ? 'medium' : 'high';
+            bodyHTML = `
+                <div class="summary-metrics" style="margin-top:1.5rem">
                     <div class="summary-item">
-                        <span class="summary-label">Applicant Monthly Income</span>
-                        <span class="summary-value">₹${parseFloat(document.getElementById('ApplicantIncome').value).toLocaleString('en-IN')}/mo</span>
+                        <span class="summary-label">Your Monthly Income</span>
+                        <span class="summary-value">₹${fmt(applicantIncome)}/mo</span>
                     </div>
                     <div class="summary-item">
-                        <span class="summary-label">Requested Loan Amount</span>
-                        <span class="summary-value">₹${parseFloat(document.getElementById('LoanAmount').value).toLocaleString('en-IN')}</span>
+                        <span class="summary-label">You Requested</span>
+                        <span class="summary-value">₹${fmt(loanAmount)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Max Eligible Loan</span>
+                        <span class="summary-value text-success">₹${fmt(rec.recommended_loan)}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Monthly EMI</span>
+                        <span class="summary-value text-accent">₹${fmt(rec.suggested_emi)}/mo</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Interest Rate / Tenure</span>
+                        <span class="summary-value">${rec.interest_rate}% p.a. · ${rec.tenure_years} Years</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">EMI-to-Income · Risk</span>
+                        <span class="summary-value">${rec.emi_to_income_ratio}% · <span class="risk-badge ${riskCls}">${rec.risk_level}</span></span>
                     </div>
                     <div class="summary-item">
                         <span class="summary-label">Credit History</span>
-                        <span class="summary-value" style="color: ${document.getElementById('Credit_History').value === '1' ? 'var(--success)' : 'var(--danger)'}">
-                            ${document.getElementById('Credit_History').value === '1' ? 'Good Credit History' : 'Poor Credit History'}
+                        <span class="summary-value ${creditHistory === '1' ? 'text-success' : 'text-danger'}">
+                            ${creditHistory === '1' ? 'Good' : 'Poor'}
                         </span>
                     </div>
+                </div>`;
+        }
+
+        // ── REJECTED: show actual numbers + tips ──────────────────────────────
+        if (!isApproved && rec) {
+            const tipItems = tips.map(t =>
+                `<li><span class="suggestion-dot">›</span><span>${t}</span></li>`
+            ).join('');
+
+            bodyHTML = `
+                <div class="rejection-box">
+                    <p class="box-heading">Your Financial Snapshot</p>
+                    <div class="summary-metrics">
+                        <div class="summary-item">
+                            <span class="summary-label">Your Monthly Income</span>
+                            <span class="summary-value">₹${fmt(rec.total_income)}/mo</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">You Requested</span>
+                            <span class="summary-value text-danger">₹${fmt(loanAmount)}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Max You Can Get</span>
+                            <span class="summary-value text-success">₹${fmt(rec.recommended_loan)}</span>
+                        </div>
+                        ${rec.shortfall > 0 ? `
+                        <div class="summary-item">
+                            <span class="summary-label">Reduce Loan By</span>
+                            <span class="summary-value text-danger">₹${fmt(rec.shortfall)}</span>
+                        </div>` : ''}
+                        <div class="summary-item">
+                            <span class="summary-label">Affordable EMI</span>
+                            <span class="summary-value text-accent">₹${fmt(rec.suggested_emi)}/mo</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Credit History</span>
+                            <span class="summary-value ${creditHistory === '1' ? 'text-success' : 'text-danger'}">
+                                ${creditHistory === '1' ? 'Good' : 'Poor'}
+                            </span>
+                        </div>
+                    </div>
+                    ${tipItems.length > 0 ? `
+                    <div class="result-divider"></div>
+                    <p class="box-heading">How to Improve Eligibility</p>
+                    <ul class="suggestion-list">${tipItems}</ul>` : ''}
+                </div>`;
+        }
+
+        // ── Assemble card ─────────────────────────────────────────────────────
+        resultSection.innerHTML = `
+            <div class="glass-card result-container" style="animation: fadeIn 0.6s ease-in-out forwards;">
+
+                <div class="result-badge ${isApproved ? 'approved' : 'rejected'}">
+                    ${isApproved ? approvedSVG : rejectedSVG}
                 </div>
 
-                <div style="display: flex; justify-content: center; gap: 1rem;">
+                <h1 class="result-title ${isApproved ? 'approved' : 'rejected'}">
+                    ${isApproved ? 'Loan Approved' : 'Loan Rejected'}
+                </h1>
+
+                <p class="result-text">
+                    ${isApproved
+                        ? 'Congratulations! Based on your financial profile you are eligible. Here is your loan summary.'
+                        : 'Your application could not be approved at this time. Here is what we found.'
+                    }
+                </p>
+
+                ${bodyHTML}
+
+                <div style="display:flex; justify-content:center; gap:1rem; margin-top:2rem;">
                     <button class="btn btn-primary" onclick="window.location.reload();">
-                        <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.253 8H18"></path></svg>
+                        <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.253 8H18"></path></svg>
                         New Evaluation
                     </button>
                     <a href="/" class="btn btn-secondary">
-                        <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                         Home Dashboard
                     </a>
                 </div>
-            </div>
-        `;
+
+            </div>`;
 
         formWrapper.style.display = 'none';
         resultSection.style.display = 'block';
