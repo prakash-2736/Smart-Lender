@@ -1,69 +1,244 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Smart Lender Prediction</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartLender™ AI - Predict Eligibility</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-<h1>Loan Approval Prediction</h1>
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div class="logo-container">
+            <a href="/" style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
+                <div class="logo-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <div class="logo-text">Smart<span>Lender</span></div>
+            </a>
+        </div>
+        <div>
+            <a href="/" class="btn btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;">Dashboard</a>
+        </div>
+    </header>
 
-<form action="/predict" method="POST">
+    <!-- Main Content Area -->
+    <div id="result-section" style="display: none; max-width: 700px; margin: 0 auto;">
+        <!-- Dynamic Result Card will be loaded here via JS -->
+    </div>
 
-    <label>Gender</label><br>
-    <select name="Gender">
-        <option value="1">Male</option>
-        <option value="0">Female</option>
-    </select><br><br>
+    <div id="form-wrapper" style="max-width: 750px; margin: 0 auto;">
+        <div class="glass-card">
+            
+            <!-- Loading Overlay -->
+            <div id="loading-overlay" class="loading-overlay">
+                <div class="spinner"></div>
+                <div id="loader-status" class="loading-status">Evaluating application...</div>
+                <div class="loading-substatus">Analyzing attributes against historical patterns</div>
+            </div>
 
-    <label>Married</label><br>
-    <select name="Married">
-        <option value="1">Yes</option>
-        <option value="0">No</option>
-    </select><br><br>
+            <!-- Steps Progress Bar -->
+            <div class="form-steps">
+                <div class="step-item active">
+                    <div class="step-indicator">1</div>
+                    <span class="step-label">Demographics</span>
+                </div>
+                <div class="step-item">
+                    <div class="step-indicator">2</div>
+                    <span class="step-label">Financials</span>
+                </div>
+                <div class="step-item">
+                    <div class="step-indicator">3</div>
+                    <span class="step-label">Loan Details</span>
+                </div>
+            </div>
 
-    <label>Dependents</label><br>
-    <input type="number" name="Dependents"><br><br>
+            <!-- Prediction Form -->
+            <form id="predictor-form" action="/predict" method="POST">
+                
+                <!-- SECTION 1: Personal Info -->
+                <div class="form-section active">
+                    <h2 class="section-title">Applicant Demographics</h2>
+                    
+                    <div class="grid-2">
+                        <!-- Gender -->
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <div class="option-cards" data-select="Gender">
+                                <div class="option-card" data-value="1">Male</div>
+                                <div class="option-card" data-value="0">Female</div>
+                            </div>
+                            <select name="Gender" id="Gender" style="display:none;">
+                                <option value="1" selected>Male</option>
+                                <option value="0">Female</option>
+                            </select>
+                        </div>
 
-    <label>Education</label><br>
-    <select name="Education">
-        <option value="0">Graduate</option>
-        <option value="1">Not Graduate</option>
-    </select><br><br>
+                        <!-- Married -->
+                        <div class="form-group">
+                            <label>Marital Status</label>
+                            <div class="option-cards" data-select="Married">
+                                <div class="option-card" data-value="1">Married</div>
+                                <div class="option-card" data-value="0">Single</div>
+                            </div>
+                            <select name="Married" id="Married" style="display:none;">
+                                <option value="1">Married</option>
+                                <option value="0" selected>Single</option>
+                            </select>
+                        </div>
+                    </div>
 
-    <label>Self Employed</label><br>
-    <select name="Self_Employed">
-        <option value="1">Yes</option>
-        <option value="0">No</option>
-    </select><br><br>
+                    <div class="grid-2" style="margin-top: 1rem;">
+                        <!-- Education -->
+                        <div class="form-group">
+                            <label>Education</label>
+                            <div class="option-cards" data-select="Education">
+                                <div class="option-card" data-value="0">Graduate</div>
+                                <div class="option-card" data-value="1">Undergraduate</div>
+                            </div>
+                            <select name="Education" id="Education" style="display:none;">
+                                <option value="0" selected>Graduate</option>
+                                <option value="1">Undergraduate</option>
+                            </select>
+                        </div>
 
-    <label>Applicant Income</label><br>
-    <input type="number" name="ApplicantIncome"><br><br>
+                        <!-- Self Employed -->
+                        <div class="form-group">
+                            <label>Employment Type</label>
+                            <div class="option-cards" data-select="Self_Employed">
+                                <div class="option-card" data-value="1">Self Employed</div>
+                                <div class="option-card" data-value="0">Salaried / Other</div>
+                            </div>
+                            <select name="Self_Employed" id="Self_Employed" style="display:none;">
+                                <option value="1">Self Employed</option>
+                                <option value="0" selected>Salaried / Other</option>
+                            </select>
+                        </div>
+                    </div>
 
-    <label>Coapplicant Income</label><br>
-    <input type="number" name="CoapplicantIncome"><br><br>
+                    <!-- Dependents -->
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label for="Dependents">Number of Dependents</label>
+                        <input type="number" id="Dependents" name="Dependents" class="form-input" min="0" max="10" value="0" required>
+                        <span class="form-help">Number of family members financially dependent on you.</span>
+                    </div>
 
-    <label>Loan Amount</label><br>
-    <input type="number" name="LoanAmount"><br><br>
+                    <div class="form-actions">
+                        <div></div>
+                        <button type="button" class="btn btn-primary btn-next">
+                            Continue
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
 
-    <label>Loan Amount Term</label><br>
-    <input type="number" name="Loan_Amount_Term"><br><br>
+                <!-- SECTION 2: Financials -->
+                <div class="form-section">
+                    <h2 class="section-title">Financial Profile</h2>
+                    
+                    <!-- Applicant Income -->
+                    <div class="form-group">
+                        <label for="ApplicantIncome">Primary Applicant Monthly Income (₹)</label>
+                        <input type="number" id="ApplicantIncome" name="ApplicantIncome" class="form-input" min="0" placeholder="e.g. 50000" value="50000" required>
+                        <span class="form-help">Main borrower's monthly gross income in Rupees.</span>
+                    </div>
 
-    <label>Credit History</label><br>
-    <select name="Credit_History">
-        <option value="1">Good</option>
-        <option value="0">Bad</option>
-    </select><br><br>
+                    <!-- Co-applicant Income -->
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <label for="CoapplicantIncome">Co-borrower Monthly Income (₹)</label>
+                        <input type="number" id="CoapplicantIncome" name="CoapplicantIncome" class="form-input" min="0" placeholder="e.g. 15000" value="0" required>
+                        <span class="form-help">Secondary borrower's monthly gross income. Enter 0 if none.</span>
+                    </div>
 
-    <label>Property Area</label><br>
-    <select name="Property_Area">
-        <option value="0">Rural</option>
-        <option value="1">Semiurban</option>
-        <option value="2">Urban</option>
-    </select><br><br>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary btn-prev">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            Back
+                        </button>
+                        <button type="button" class="btn btn-primary btn-next">
+                            Continue
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
 
-    <button type="submit">Predict</button>
+                <!-- SECTION 3: Loan Details -->
+                <div class="form-section">
+                    <h2 class="section-title">Loan & Credit History</h2>
 
-</form>
+                    <div class="grid-2">
+                        <!-- Loan Amount -->
+                        <div class="form-group">
+                            <label for="LoanAmount">Requested Loan Amount (₹)</label>
+                            <input type="number" id="LoanAmount" name="LoanAmount" class="form-input" min="1" placeholder="e.g. 1200000" value="1200000" required>
+                            <span class="form-help">Total requested loan amount in Rupees (e.g. 1200000 = ₹12 Lakhs).</span>
+                        </div>
 
+                        <!-- Loan Amount Term -->
+                        <div class="form-group">
+                            <label for="Loan_Amount_Term">Loan Term Duration (Months)</label>
+                            <input type="number" id="Loan_Amount_Term" name="Loan_Amount_Term" class="form-input" min="12" max="600" value="360" required>
+                            <span class="form-help">Standard term length (e.g. 360 months = 30 years).</span>
+                        </div>
+                    </div>
+
+                    <div class="grid-2" style="margin-top: 1rem;">
+                        <!-- Credit History -->
+                        <div class="form-group">
+                            <label>CIBIL Score Status</label>
+                            <div class="option-cards" data-select="Credit_History">
+                                <div class="option-card" data-value="1">CIBIL Score &ge; 750 (Good)</div>
+                                <div class="option-card" data-value="0">CIBIL Score &lt; 750 (Poor)</div>
+                            </div>
+                            <select name="Credit_History" id="Credit_History" style="display:none;">
+                                <option value="1" selected>CIBIL Score &ge; 750 (Good)</option>
+                                <option value="0">CIBIL Score &lt; 750 (Poor)</option>
+                            </select>
+                        </div>
+
+                        <!-- Property Area -->
+                        <div class="form-group">
+                            <label>Property Zone</label>
+                            <div class="option-cards" data-select="Property_Area">
+                                <div class="option-card" data-value="0">Rural</div>
+                                <div class="option-card" data-value="1">Semiurban</div>
+                                <div class="option-card" data-value="2">Urban</div>
+                            </div>
+                            <select name="Property_Area" id="Property_Area" style="display:none;">
+                                <option value="0" selected>Rural</option>
+                                <option value="1">Semiurban</option>
+                                <option value="2">Urban</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary btn-prev">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            Back
+                        </button>
+                        <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, var(--success), #059669); box-shadow: 0 4px 15px var(--success-glow);">
+                            Evaluate Eligibility
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="container" style="padding: 1.5rem 0; margin-top: 0;">
+        <p>&copy; 2026 SmartLender™ Systems. Powered by Machine Learning classifiers.</p>
+    </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

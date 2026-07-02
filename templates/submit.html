@@ -1,15 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Prediction Result</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartLender™ AI - Assessment Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-<h1>{{ prediction }}</h1>
+<div class="container" style="max-width: 700px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh;">
+    <!-- Result Card -->
+    <div class="glass-card result-container" style="width: 100%; animation: fadeIn 0.6s ease-in-out forwards;">
+        
+        <div class="result-badge {% if approved %}approved{% else %}rejected{% endif %}">
+            {% if approved %}
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+            {% else %}
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            {% endif %}
+        </div>
 
-<br>
+        <h1 class="result-title {% if approved %}approved{% else %}rejected{% endif %}">
+            {{ prediction }}
+        </h1>
+        
+        <p class="result-text">
+            {% if approved %}
+                Our machine learning models have analyzed the financial profile and determined high eligibility for the requested loan amount.
+            {% else %}
+                Our analysis indicates high risk profile. The financial characteristics of this application do not meet the minimum safety parameters.
+            {% endif %}
+        </p>
 
-<a href="/">Home</a>
+        <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+            <a href="/predict" class="btn btn-primary">
+                <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.253 8H18"></path></svg>
+                New Evaluation
+            </a>
+            <a href="/" class="btn btn-secondary">
+                <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                Home Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="container" style="padding: 1.5rem 0; margin-top: 0;">
+        <p>&copy; 2026 SmartLender™ Systems. Powered by Machine Learning classifiers.</p>
+    </div>
+</footer>
 
 </body>
 </html>
