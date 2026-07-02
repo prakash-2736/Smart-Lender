@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartLender™ AI - Predict Eligibility</title>
+    <link rel="icon" type="image/png" sizes="64x64" href="{{ url_for('static', filename='images/logo.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -14,9 +15,7 @@
         <div class="logo-container">
             <a href="/" style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
                 <div class="logo-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    </svg>
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="SmartLender Logo" class="logo-img">
                 </div>
                 <div class="logo-text">Smart<span>Lender</span></div>
             </a>
